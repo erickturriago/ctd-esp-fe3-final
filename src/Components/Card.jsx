@@ -1,20 +1,46 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useDentistaStates } from "./utils/global.context";
+import {useNavigate } from "react-router-dom";
+import IconDentista from '../../public/images/doctor.jpg'
 
 
-const Card = ({ name, username, id }) => {
+const Card = ({dentista}) => {
+
+  const {name, username, id } = dentista
+  const [isFav,setIsFav]=useState(false)
+  const {state, dispatch} = useDentistaStates()
+  const navigate = useNavigate();
 
   const addFav = ()=>{
-    // Aqui iria la logica para agregar la Card en el localStorage
+    const dentistaSelected = JSON.parse(localStorage.getItem('favs')) || []
+    if(!(dentistaSelected.filter((den)=>den.id==dentista.id).length>0)){
+      dispatch({type: 'ADD_FAV', payload: dentista})
+      localStorage.setItem('favs', JSON.stringify([...dentistaSelected, dentista]))
+      setIsFav(true)
+    }
+    else{
+      dispatch({type: 'DEL_FAV', payload: dentista})
+      localStorage.setItem('favs',JSON.stringify(dentistaSelected.filter((den)=>den.id!==dentista.id)));
+      setIsFav(false)
+    }
   }
+
+  const handleClick = () => {
+    navigate('/detail/'+dentista.id);
+  };
+
+  useEffect(()=>{
+    const dentistaSelected = JSON.parse(localStorage.getItem('favs')) || []
+    const filtro = dentistaSelected.filter((dentistaFilter)=>dentistaFilter.id == dentista.id)
+    filtro.length>0?setIsFav(true):setIsFav(false);
+  },[])
 
   return (
     <div className="card">
-        {/* En cada card deberan mostrar en name - username y el id */}
-
-        {/* No debes olvidar que la Card a su vez servira como Link hacia la pagina de detalle */}
-
-        {/* Ademas deberan integrar la logica para guardar cada Card en el localStorage */}
-        <button onClick={addFav} className="favButton">Add fav</button>
+        <img className="iconDentista" src={IconDentista} onClick={handleClick} alt="" />
+        <h4>{name}</h4>
+        <p>{username}</p>
+        <i className={`fa-heart favIcon ${isFav?'fa-solid fillHeart':'fa-regular emptyHeart'}`} onClick={addFav}></i>
     </div>
   );
 };
